@@ -1,0 +1,10 @@
+[project]
+name = "game-bot"
+version = "0.1.0"
+
+dependencies = [
+    "python-dotenv==1.2.4",
+    "requests==2.34.2",
+    "pyautogui==0.9.54",
+    "keyboard==0.13.5"
+]
