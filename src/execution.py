@@ -27,6 +27,40 @@ def execute_move(move: dict[str, any]) -> None:
             keyboard.release(key)
 
 
+def remove_idle_time(events) -> list[dict[str, any]]:
+    """Remove idle time from a list of events."""
+    
+    # INFO: Ignore key E
+    events = [e for e in events if e["key"] != "e"]
+
+    active_keys = set()
+    last_time = None
+    removed_time = 0
+    treated_events = []
+
+    for event in events:
+        current_time = event["time"]
+
+        # INFO: If no keys are active, accumulate the idle time
+        if last_time is not None and not active_keys:
+            removed_time += current_time - last_time
+
+        treated_events.append({
+            **event,
+            "time": current_time - removed_time
+        })
+
+        if event["event"] == "down":
+            active_keys.add(event["key"])
+        elif event["event"] == "up":
+            active_keys.discard(event["key"])
+
+        last_time = current_time
+
+    return treated_events
+
+
+
 def execute_inverse_move(move: dict[str, any]):
     """
     Execute a move recorded by get_zqsde_move.
@@ -35,9 +69,10 @@ def execute_inverse_move(move: dict[str, any]):
         move (dict): The move to execute.
     """
     events = move.get("events", [])
+    treated_events = remove_idle_time(events)
 
     # INFO: Reverse the order of events
-    inverse_events = events[::-1]
+    inverse_events = treated_events[::-1]
 
     # INFO: Map keys to their inverse
     key_mapping = {"q": "d", "d": "q", "z": "s", "s": "z"}

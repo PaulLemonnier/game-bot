@@ -16,10 +16,12 @@ def main():
     # get_zqsde_move()
 
     # EXECUTION PART
-    first_move = load_json("zqsde_move_fc7889.json")
-    execute_inverse_move(move=first_move)
-    interruptible_sleep(2)
+    first_move = load_json("zqsde_move_2b554e.json")
+    
     execute_move(move=first_move)
+    interruptible_sleep(10)
+    execute_inverse_move(move=first_move)
+    interruptible_sleep(100)
     
 
 
