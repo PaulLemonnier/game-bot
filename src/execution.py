@@ -1,7 +1,7 @@
 from time import perf_counter
 import keyboard
 
-from src.system import interruptible_sleep
+from src.system import interruptible_sleep, interruptible_wait_until
 
 def execute_move(move: dict[str, any]) -> None:
     """
@@ -10,21 +10,19 @@ def execute_move(move: dict[str, any]) -> None:
     Args:
         move (dict): The move to execute.
     """
-    events = move.get("events", [])
     start_time = perf_counter()
 
-    for event in events:
-        elapsed = perf_counter() - start_time
-        wait_time = event["time"] - elapsed
+    for event in move["events"]:
 
-        if wait_time > 0:
-            interruptible_sleep(wait_time)
+        target_time = start_time + event["time"]
 
-        key = event["key"]
+        if not interruptible_wait_until(target_time):
+            return
+        
         if event["event"] == "down":
-            keyboard.press(key)
+            keyboard.press(event["key"])
         elif event["event"] == "up":
-            keyboard.release(key)
+            keyboard.release(event["key"])
 
 
 def remove_idle_time(events) -> list[dict[str, any]]:
@@ -36,6 +34,8 @@ def remove_idle_time(events) -> list[dict[str, any]]:
     active_keys = set()
     last_time = None
     removed_time = 0
+    buffer_time = 0.2
+    delta_time = 0.1
     treated_events = []
 
     for event in events:
@@ -43,7 +43,18 @@ def remove_idle_time(events) -> list[dict[str, any]]:
 
         # INFO: If no keys are active, accumulate the idle time
         if last_time is not None and not active_keys:
-            removed_time += current_time - last_time
+            idle_duration = current_time - last_time
+
+            # INFO: Add buffer to not remove 100% of idle time
+            removed_time += max(0.0, idle_duration - buffer_time)
+
+        new_time = current_time - removed_time
+
+        # INFO: Ensure timestamps are always strictly increasing
+        if treated_events:
+            previous_time = treated_events[-1]["time"]
+            if new_time <= previous_time:
+                new_time = previous_time + delta_time
 
         treated_events.append({
             **event,
