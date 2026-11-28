@@ -4,7 +4,7 @@ from helpers import save_json
 import pyautogui
 import keyboard
 
-def get_zqsde_move() -> dict[str, any]:
+def get_zqsde_move(name: str|None = None) -> dict[str, any]:
     """
     Listen ZQSD keys to return list of keys usesd in the order and pressed time.
 
@@ -21,7 +21,7 @@ def get_zqsde_move() -> dict[str, any]:
             ]
         }
     """
-    keys = {"z", "q", "s", "d", "e"}
+    keys = {"z", "q", "s", "d", "e", "b", "&", "é"}
     events = []
     pressed_keys = set()
 
@@ -74,6 +74,9 @@ def get_zqsde_move() -> dict[str, any]:
         })
     # INFO: Save the recorded events to a JSON file
     filename = f"zqsde_move_{uuid4().hex[:6]}"
+    if name:
+        filename = f"zqsde_move_{name}"
+    
     res = {
         "name": filename,
         "description": "Recorded ZQSD/E movement",
